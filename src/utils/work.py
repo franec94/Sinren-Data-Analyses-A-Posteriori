@@ -31,7 +31,7 @@ import pandas as pd
 # Custom Imports
 # ---------------------------- #
 
-from utils.functions import check_dir_exists, create_dir
+from utils.functions import check_dir_exists, check_file_exists, create_dir
 
 def work(opt):
     logging.info(f"Doing work...")
@@ -41,7 +41,7 @@ def work(opt):
 
 
     file_train_path = os.path.join(opt.data_path, 'train', 'result_comb_train.txt')
-    check_dir_exists(file_train_path)
+    check_file_exists(file_train_path)
 
     columns = "#params;seed;hl;hf;mse;psnr;ssim;eta".split(";")
     train_arr = np.loadtxt(file_train_path)
