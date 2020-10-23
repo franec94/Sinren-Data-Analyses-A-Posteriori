@@ -36,17 +36,20 @@ from utils.functions import check_dir_exists, check_file_exists, create_dir
 def work(opt):
     logging.info(f"Doing work...")
 
-    train_path = os.path.join(opt.data_path, 'train')
+    train_path: str = os.path.join(opt.data_path, 'train')
     check_dir_exists(train_path)
 
 
-    file_train_path = os.path.join(opt.data_path, 'train', 'result_comb_train.txt')
+    file_train_path: str = os.path.join(opt.data_path, 'train', 'result_comb_train.txt')
     check_file_exists(file_train_path)
 
-    columns = "#params;seed;hl;hf;mse;psnr;ssim;eta".split(";")
-    train_arr = np.loadtxt(file_train_path)
+    columns: list = "#params;seed;hl;hf;mse;psnr;ssim;eta".split(";")
+    train_arr: np.ndarray = np.loadtxt(file_train_path)
 
-    train_df = pd.DataFrame(data = train_arr, columns = columns)
-    print(train_df.head(5))
+    train_df: pd.DataFrame = pd.DataFrame(data = train_arr, columns = columns)
+    
+    logging.info(train_df.head(5))
+    train_df.info()
+    logging.info(train_df.describe())
 
     pass
