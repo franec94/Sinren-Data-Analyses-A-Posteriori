@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
  # -*- coding: utf-8 -*-
 
+# ---------------------------- #
+# Generic Imports
+# ---------------------------- #
 from __future__ import print_function
 from __future__ import division
 
@@ -38,3 +41,9 @@ matplotlib.style.use('ggplot')
 import numpy as np
 import pandas as pd
 import sklearn
+
+# ---------------------------- #
+# Custom Imports
+# ---------------------------- #
+from utils.custom_argparser import get_cmd_line_opts
+from utils.functions import check_dir_exists, create_dir
