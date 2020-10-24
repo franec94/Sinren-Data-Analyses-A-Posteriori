@@ -116,7 +116,8 @@ def get_dict_dataframes(conf_data):
         try:
             check_file_exists(a_file, raise_exception=True)
             train_arr = np.loadtxt(a_file)
-            train_df = pd.DataFrame(data = train_arr, columns = columns)
+            indeces = [a_ts] * len(train_arr)
+            train_df = pd.DataFrame(data = train_arr, columns = columns, index=indeces)
             result_dict_df[a_ts] = train_df
         except Exception as _:
             pass

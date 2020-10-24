@@ -45,6 +45,7 @@ import sys
 import time
 import yaml
 
+import scipy
 import numpy as np
 import pandas as pd
 

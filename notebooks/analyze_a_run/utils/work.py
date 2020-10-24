@@ -74,7 +74,7 @@ def calculate_several_jpeg_compression(image, image_dim_bits, qualities):
     # Named tuple for creating a record related to
     # a trial for compressing the target image.
     typename = 'WeightsPsnr'
-    fields_name = ['psnr', 'quality', 'file_size_bits', 'bpp', 'width', 'heigth', 'CR']
+    fields_name = ['psnr', 'ssim', 'quality', 'file_size_bits', 'bpp', 'width', 'heigth', 'CR']
     WeightsPsnr = collections.namedtuple(typename, fields_name) 
 
     # List used to save results and keep trace of failures, if any.
@@ -107,10 +107,11 @@ def calculate_several_jpeg_compression(image, image_dim_bits, qualities):
                 # Scores
                 bpp = compressed_file_size_bits / pixels    
                 psnr_score = psnr(np.asarray(image), np.asarray(im_jpeg), data_range=255)
+                ssim_score = ssim(np.asarray(image), np.asarray(im_jpeg), data_range=255)
                 CR = image_dim_bits / compressed_file_size_bits
             
                 # Store results into a list
-                values = [psnr_score, quality, compressed_file_size_bits, bpp, width, height, CR]
+                values = [psnr_score, ssim_score, quality, compressed_file_size_bits, bpp, width, height, CR]
                 result_tuples.append(WeightsPsnr._make(values))
         except Exception as err:
             # Keep track of unaccepted quality values for compressing the image
@@ -124,9 +125,9 @@ def calculate_several_jpeg_compression(image, image_dim_bits, qualities):
 def calculate_several_jpeg_compression_with_crops(image, qualities, cropping_list):
     # Named tuple for creating a record related to
     # a trial for compressing the target image.
-    name_obj = 'WeightsPsnr'
-    attributes = ['psnr', 'quality', 'file_size_bits', 'bpp', 'width', 'heigth', 'CR']
-    WeightsPsnr = collections.namedtuple(name_obj, attributes) 
+    typename = 'WeightsPsnr'
+    fields_name = ['psnr', 'ssim', 'quality', 'file_size_bits', 'bpp', 'width', 'heigth', 'CR']
+    WeightsPsnr = collections.namedtuple(typename, fields_name) 
 
     # List used to save results and keep trace of failures, if any.
     result_tuples = []
@@ -171,10 +172,11 @@ def calculate_several_jpeg_compression_with_crops(image, qualities, cropping_lis
                     # Scores
                     bpp = compressed_file_size_bits / pixels    
                     psnr_score = psnr(np.asarray(im_tmp), np.asarray(im_jpeg), data_range=255)
+                    ssim_score = ssim(np.asarray(im_tmp), np.asarray(im_jpeg), data_range=255)
                     CR = cropped_file_size_bits / compressed_file_size_bits
             
                     # Store results into a list
-                    values = [psnr_score, quality, compressed_file_size_bits, bpp, width, height, CR]
+                    values = [psnr_score, ssim_score, quality, compressed_file_size_bits, bpp, width, height, CR]
                     result_tuples.append(WeightsPsnr._make(values))
                     pass
             except Exception as err:
