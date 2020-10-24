@@ -1,0 +1,28 @@
+# Swith to decide whether focusing onto a single run or diving to 
+# analysis that takes into account multiple runs.
+is_single_run: True
+
+# Dataframe details:
+columns_df_str: "#params;seed;hl;hf;mse;psnr;ssim;eta"
+
+# Infos exploited when dealing with data collected from a single run.
+result_file_path: "/path/to/results.txt"
+result_timestamp: None
+
+cropped_image:
+    flag: False
+    crop_size: (256, 256)
+
+# Infos exploited when dealing with data collected from a multiple runs.
+results_file_paths:
+ - "/path/1/to/results.txt"
+ - "/path/2/to/results.txt"
+ 
+results_timestamps:
+ - "..........-......"
+ - "..........-......"
+
+images:
+    - cropped_image:
+        flag: False
+        crop_size: (256, 256)
