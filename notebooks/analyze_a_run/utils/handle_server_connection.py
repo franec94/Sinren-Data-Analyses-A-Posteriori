@@ -149,7 +149,7 @@ def get_data_from_db(conf_data):
     
     records_list = _get_data_from_db(conf_data, sql_statement)
     
-    records_list_filtered = _filter_data(records_list, target_status = 'Done')
+    records_list_filtered = _filter_data(records_list, target_status = 'done')
     records_list_mapped = _map_data(records_list_filtered, root_data_dir = conf_data['db_infos']['root_data_dir'])
     
     # pprint(records_list_mapped)
