@@ -42,6 +42,9 @@ from skimage.metrics import mean_squared_error
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 
+from utils.handle_server_connection import get_data_from_db
+from utils.functions import read_conf_file, load_target_image, get_dict_dataframes, get_dataframe
+
 def get_new_targets(target, size):
     offset = target // 2
     if target % 2 == 0:
@@ -186,3 +189,28 @@ def calculate_several_jpeg_compression_with_crops(image, qualities, cropping_lis
             pass
         pass
     return result_tuples, failure_qualities
+
+
+def fetch_data(conf_data):
+    records_list = None
+    if not conf_data['data_fetch_strategy']['fetch_from_db']:
+        if conf_data['is_single_run']:
+            train_df = get_dataframe(conf_data)
+        else:
+            ts_list = '1603410154-248962,1603421693-497763'.split(",")
+            # ts_list = '1603421693-497763'.split(",")
+            result_dict_df = get_dict_dataframes(conf_data)
+                # train_df: pd.DataFrame = result_dict_df['1603410154-248962'] # train_df: pd.DataFrame = result_dict_df['1603478755-305517']
+    
+            data = list(map(operator.itemgetter(1), filter(lambda item: item[0] in ts_list, result_dict_df.items())))
+            train_df = pd.concat(data)
+            print(collections.Counter(train_df['hl']))
+            pass
+    else:
+        result_dict_df, records_list = get_data_from_db(conf_data)
+        # data = list(map(operator.itemgetter(1), filter(lambda item: item[0] in ts_list, result_dict_df.items())))
+        data = list(map(operator.itemgetter(1), result_dict_df.items()))
+        train_df = pd.concat(data)
+        print(collections.Counter(train_df['hl']))
+        pass
+    return train_df, result_dict_df, records_list

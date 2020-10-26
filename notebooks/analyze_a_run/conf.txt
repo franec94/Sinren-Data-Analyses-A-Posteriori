@@ -1,6 +1,15 @@
 # Swith to decide whether focusing onto a single run or diving to 
 # analysis that takes into account multiple runs.
-is_single_run: False
+data_fetch_strategy:
+    is_single_run: False
+    fetch_from_db: True
+
+db_infos:
+    is_local_db: True
+    root_data_dir: ''
+    db_name: 'siren-db-train.db'
+    db_location: ''
+    db_url: 'None'
 
 # Dataframe details:
 columns_df_str: "#params;seed;hl;hf;mse;psnr;ssim;eta"
