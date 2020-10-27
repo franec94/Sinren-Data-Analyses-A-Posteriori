@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 SHOW_VISDOM_RESULTS = False
+DARK_BACKGROUND_PLT = True
 
 # ----------------------------------------------- #
 # Python's Imports
@@ -65,9 +66,12 @@ if in_colab() or in_notebook():
 import scipy
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt # plt.style.use('dark_background')
+import matplotlib.pyplot as plt
+if DARK_BACKGROUND_PLT:
+    plt.style.use('dark_background')
+    pass
 import seaborn as sns # sns.set_theme(style="white") # sns.set(style="whitegrid", color_codes=True)
-sns.set(style="darkgrid", color_codes=True)
+# sns.set(style="darkgrid", color_codes=True)
 
 # skimage
 # ----------------------------------------------- #
@@ -89,5 +93,5 @@ from sklearn.preprocessing import PolynomialFeatures
 
 from utils.functions import read_conf_file, load_target_image, get_dict_dataframes, get_dataframe
 from utils.make_graphics import compare_compressions
-from utils.work import calculate_several_jpeg_compression, get_cropped_by_center_image, fetch_data
-from utils.handle_server_connection import get_data_from_db
+from utils.work import calculate_several_jpeg_compression, get_cropped_by_center_image, fetch_data, fetch_data_by_status, fetch_data_by_constraints
+from utils.handle_server_connection import get_data_from_db, get_data_from_db_by_status

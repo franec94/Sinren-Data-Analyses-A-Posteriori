@@ -140,7 +140,7 @@ def get_data_from_db(conf_data):
         elif isinstance(crop_size, int):
             crop_size = f'"[{crop_size},{crop_size}]"'
             pass
-        sql_statement += f" WHERE image_size = {crop_size};"
+        sql_statement += f" WHERE image_size = {crop_size}"
         pass
 
     print(sql_statement)
@@ -157,3 +157,57 @@ def get_data_from_db(conf_data):
     columns = conf_data['columns_df_str'].split(";")
     result_dict_df = _get_dict_dataframes(records_list_mapped, columns)
     return result_dict_df, records_list_mapped
+
+def get_data_from_db_by_status(conf_data, status = '*'):
+    table_name = 'table_runs_logged'
+    table_attributes = "image,date,timestamp,hidden_features,image_size,status"
+    
+    sql_statement = f"SELECT {table_attributes} FROM {table_name}"
+    if conf_data['cropped_image']['flag']:
+        crop_size = conf_data['cropped_image']['crop_size']
+        if isinstance(crop_size, str):
+            # print(crop_size)
+            crop_size = re.sub('\)', ']"', crop_size)
+            crop_size = re.sub('\(', '"[', crop_size)
+            crop_size = re.sub(' ', '', crop_size)
+        elif isinstance(crop_size, int):
+            crop_size = f'"[{crop_size},{crop_size}]"'
+            pass
+        sql_statement += f" WHERE image_size = {crop_size}"
+        pass
+    
+    if status != '*':
+        sql_statement += f" and status = {status}"
+
+    print(sql_statement + ";")
+        
+        
+    
+    records_list = _get_data_from_db(conf_data, sql_statement + ";")
+    
+    if status != '*':
+        records_list_filtered = _filter_data(records_list, target_status = f'{status}')
+    else:
+        records_list_filtered = records_list
+    records_list_mapped = _map_data(records_list_filtered, root_data_dir = conf_data['db_infos']['root_data_dir'])
+    
+    # pprint(records_list_mapped)
+    
+    # columns = conf_data['columns_df_str'].split(";")
+    # result_dict_df = _get_dict_dataframes(records_list_mapped, columns)
+    # return result_dict_df, records_list_mapped
+    return records_list_mapped
+
+def get_data_from_db_by_constraints(conf_data, constraints = '*'):
+    table_name = 'table_runs_logged'
+    table_attributes = "image,date,timestamp,hidden_features,image_size,status"
+    
+    sql_statement = \
+        f"SELECT {table_attributes} FROM {table_name}" \
+        + f" WHERE {constraints}"
+    print(sql_statement + ";")
+    
+    records_list = _get_data_from_db(conf_data, sql_statement + ";")
+    
+    records_list_mapped = _map_data(records_list, root_data_dir = conf_data['db_infos']['root_data_dir'])
+    return records_list_mapped, sql_statement + ";"

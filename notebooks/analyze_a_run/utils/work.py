@@ -42,7 +42,7 @@ from skimage.metrics import mean_squared_error
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 
-from utils.handle_server_connection import get_data_from_db
+from utils.handle_server_connection import get_data_from_db, get_data_from_db_by_status, get_data_from_db_by_constraints
 from utils.functions import read_conf_file, load_target_image, get_dict_dataframes, get_dataframe
 
 def get_new_targets(target, size):
@@ -214,3 +214,51 @@ def fetch_data(conf_data):
         print(collections.Counter(train_df['hl']))
         pass
     return train_df, result_dict_df, records_list
+
+def fetch_data_by_status(conf_data, status = '*'):
+    records_list = None
+    if not conf_data['data_fetch_strategy']['fetch_from_db']:
+        return None
+    else:
+        records_list = get_data_from_db_by_status(conf_data, status = status)
+        pass
+    return records_list
+
+def chain_constraints_as_str(constraints):
+        def map_constraint(item):
+            # pprint(item)
+            attr_name = item[0]
+            attr_type = item[1]['type']
+            attr_vals = item[1]['val']
+        
+            def reduce_func(a, b, attr_type = attr_type):
+                if attr_type is int:
+                    return f'{attr_name} = {b}' if a == '' else f" {a} OR {attr_name} = {b} "
+                elif attr_type is str:
+                    b_ = f"'{b}'"
+                    return f"{attr_name} = {b_}" if a == '' else f" {a} OR {attr_name} = {b_} "
+                else:
+                    raise Exception(f'Error {str(attr_type)} not allowed!')
+            res = functools.reduce(reduce_func, attr_vals, f'')# f'{attr_name} = ')
+            # print(res)
+            return res
+        chained_constraints = str(functools.reduce(lambda a,b: f'({b})' if a == '' else f" {a} AND ({b}) ",
+            list(map(map_constraint, 
+                     filter(lambda item: operator.itemgetter(1)(item) != None, constraints._asdict().items())
+            )), f''
+        ))
+        return chained_constraints
+
+def fetch_data_by_constraints(conf_data, constraints):
+    records_list, res = None, None
+    
+    typename = 'QueryConstraints2'
+    field_names = "image;date;timestamp;hidden_features;image_size;status".split(";")
+    
+    QueryConstraints2 = collections.namedtuple(typename, field_names)
+    chained_constraints = chain_constraints_as_str(constraints)
+    
+    records_list, query_str = get_data_from_db_by_constraints(conf_data, chained_constraints)
+    
+    return records_list, query_str, chained_constraints
+    
