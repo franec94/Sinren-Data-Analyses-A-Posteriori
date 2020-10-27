@@ -224,13 +224,18 @@ def fetch_data_by_status(conf_data, status = '*'):
         pass
     return records_list
 
-def chain_constraints_as_str(constraints):
+def chain_constraints_as_str(constraints, fetch_data_downloaded = False):
         def map_constraint(item):
             # pprint(item)
             attr_name = item[0]
             attr_type = item[1]['type']
             attr_vals = item[1]['val']
-        
+            """
+            if len(attr_vals) == 0: return ''
+            if len(attr_vals) == 1:
+                if len(attr_vals[0]) == 0: return ''
+            """
+            
             def reduce_func(a, b, attr_type = attr_type):
                 if attr_type is int:
                     return f'{attr_name} = {b}' if a == '' else f" {a} OR {attr_name} = {b} "
@@ -242,14 +247,28 @@ def chain_constraints_as_str(constraints):
             res = functools.reduce(reduce_func, attr_vals, f'')# f'{attr_name} = ')
             # print(res)
             return res
+        
+        
+        def filter_unecessary_constraints(item):
+            vals = operator.itemgetter(1)(item)
+            if vals != None:
+                if len(vals['val']) == 1:
+                    if len(vals['val'][0]) == 0:
+                        # print('zero')
+                        return False
+                    pass
+                return True
+            return False
+         
         chained_constraints = str(functools.reduce(lambda a,b: f'({b})' if a == '' else f" {a} AND ({b}) ",
             list(map(map_constraint, 
-                     filter(lambda item: operator.itemgetter(1)(item) != None, constraints._asdict().items())
+                     # filter(lambda item: operator.itemgetter(1)(item) != None, constraints._asdict().items())
+                     filter(filter_unecessary_constraints, constraints._asdict().items())
             )), f''
         ))
         return chained_constraints
 
-def fetch_data_by_constraints(conf_data, constraints):
+def fetch_data_by_constraints(conf_data, constraints, fetch_data_downloaded = False):
     records_list, res = None, None
     
     typename = 'QueryConstraints2'
@@ -258,7 +277,7 @@ def fetch_data_by_constraints(conf_data, constraints):
     QueryConstraints2 = collections.namedtuple(typename, field_names)
     chained_constraints = chain_constraints_as_str(constraints)
     
-    records_list, query_str = get_data_from_db_by_constraints(conf_data, chained_constraints)
+    records_list, result_dict_df, query_str = get_data_from_db_by_constraints(conf_data, chained_constraints, fetch_data_downloaded=fetch_data_downloaded)
     
-    return records_list, query_str, chained_constraints
+    return records_list, result_dict_df, query_str, chained_constraints
     

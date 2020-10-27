@@ -77,7 +77,7 @@ def _map_data(records_list, root_data_dir):
     if records_list is None or len(records_list) == 0: return None
     
     typename = 'RunsLogged2'
-    field_names = "image,date,timestamp,hidden_features,image_size,status,full_path"
+    field_names = "image,date,timestamp,hidden_features,image_size,status,data_downloaded,full_path"
     RunsLogged2 = collections.namedtuple(typename, field_names)
     
     def map_to_full_path(item, root_data_dir = f'{root_data_dir}', filename = 'result_comb_train.txt'):
@@ -106,7 +106,7 @@ def _get_data_from_db(conf_data, sql_statement):
     
     
     typename = 'RunsLogged'
-    field_names = "image,date,timestamp,hidden_features,image_size,status"
+    field_names = "image,date,timestamp,hidden_features,image_size,status,data_downloaded"
     RunsLogged = collections.namedtuple(typename, field_names)
     
     records_list = None
@@ -127,7 +127,7 @@ def _get_data_from_db(conf_data, sql_statement):
     
 def get_data_from_db(conf_data):
     table_name = 'table_runs_logged'
-    table_attributes = "image,date,timestamp,hidden_features,image_size,status"
+    table_attributes = "image,date,timestamp,hidden_features,image_size,status,data_downloaded"
     
     sql_statement = f"SELECT {table_attributes} FROM {table_name}"
     if conf_data['cropped_image']['flag']:
@@ -160,7 +160,7 @@ def get_data_from_db(conf_data):
 
 def get_data_from_db_by_status(conf_data, status = '*'):
     table_name = 'table_runs_logged'
-    table_attributes = "image,date,timestamp,hidden_features,image_size,status"
+    table_attributes = "image,date,timestamp,hidden_features,image_size,status,data_downloaded"
     
     sql_statement = f"SELECT {table_attributes} FROM {table_name}"
     if conf_data['cropped_image']['flag']:
@@ -198,9 +198,10 @@ def get_data_from_db_by_status(conf_data, status = '*'):
     # return result_dict_df, records_list_mapped
     return records_list_mapped
 
-def get_data_from_db_by_constraints(conf_data, constraints = '*'):
+def get_data_from_db_by_constraints(conf_data, constraints = '*', fetch_data_downloaded = False):
+    result_dict_df = None
     table_name = 'table_runs_logged'
-    table_attributes = "image,date,timestamp,hidden_features,image_size,status"
+    table_attributes = "image,date,timestamp,hidden_features,image_size,status,data_downloaded"
     
     sql_statement = \
         f"SELECT {table_attributes} FROM {table_name}" \
@@ -210,4 +211,9 @@ def get_data_from_db_by_constraints(conf_data, constraints = '*'):
     records_list = _get_data_from_db(conf_data, sql_statement + ";")
     
     records_list_mapped = _map_data(records_list, root_data_dir = conf_data['db_infos']['root_data_dir'])
-    return records_list_mapped, sql_statement + ";"
+    
+    if fetch_data_downloaded is True:
+        records_list_filtered = list(filter(lambda item: getattr(item, 'data_downloaded') == 'TRUE', records_list_mapped))
+        result_dict_df = _get_dict_dataframes(records_list = records_list_filtered, columns = conf_data['columns_df_str'].split(";"))
+        pass
+    return records_list_mapped, result_dict_df, sql_statement + ";"
