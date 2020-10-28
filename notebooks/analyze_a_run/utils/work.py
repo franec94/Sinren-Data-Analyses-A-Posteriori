@@ -42,8 +42,9 @@ from skimage.metrics import mean_squared_error
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 
-from utils.handle_server_connection import get_data_from_db, get_data_from_db_by_status, get_data_from_db_by_constraints
-from utils.functions import read_conf_file, load_target_image, get_dict_dataframes, get_dataframe
+from utils.handle_server_connection import get_data_from_db, get_data_from_db_by_status, get_data_from_db_by_constraints, insert_data_read_from_logs_db, check_exists_data_read_from_logs_db
+from utils.functions import read_conf_file, load_target_image, get_dict_dataframes, get_dataframe, check_file_exists
+from utils.db_tables import TableRunsDetailsClass, TableRunsDetailsTupleClass
 
 def get_new_targets(target, size):
     offset = target // 2
@@ -280,4 +281,145 @@ def fetch_data_by_constraints(conf_data, constraints, fetch_data_downloaded = Fa
     records_list, result_dict_df, query_str = get_data_from_db_by_constraints(conf_data, chained_constraints, fetch_data_downloaded=fetch_data_downloaded)
     
     return records_list, result_dict_df, query_str, chained_constraints
+
+def get_info_from_logged_parser(parser_logged_files, train_log_files, original_images_dict, gpu_mode = False):
+    trd = TableRunsDetailsClass()
+    failed_read = []
     
+    opt_list = sorted('logging_root,hidden_features,hidden_layers,seeds,lr,num_epochs,sidelength'.split(','))
+    
+    tmp_list = 'hf,hl,image_name,lr,epochs,seed'.split(',')
+    # opt_list = 'logging_root,hidden_features,hidden_layers,seeds,lr,num_epochs,sidelength'.split(',')
+    relation_dict = dict(zip(opt_list[:-1], tmp_list))
+    def to_tuple(item):
+        item_list = item.strip().split(" ")
+        key = item_list[0]
+        if key == 'logging_root':
+            # vals = [os.path.basename(item_list)]
+            vals = [os.path.basename(item_list[1:][0])]
+        else: 
+            vals = item_list[1:]
+        return (key, vals) 
+    
+    for ii, (parser_logged_file, train_log_file) in enumerate(zip(parser_logged_files, train_log_files)):
+        print('-' * 50)
+        print('File no.', ii+1)
+        print('-' * 50)
+        
+        exists_1 = check_file_exists(parser_logged_file, raise_exception=False)
+        exists_2 = check_file_exists(parser_logged_file, raise_exception=False)
+        if exists_1 is False or exists_2 is False:
+            print('Skipped.')
+            continue
+        try:
+            with open(f'{parser_logged_file}', 'r') as f:
+                res_dict = dict(zip(opt_list, [None] * len(opt_list)))
+                content = f.read().split('\n')
+                # pprint(content)
+                res = list(filter(lambda l: True in [l.startswith(f'{opt}') for opt in opt_list], list(filter(lambda l: l.startswith('Command'), content))[0].split('--')))
+                res_dict.update(**dict(map(to_tuple, res)))
+
+                res = dict(map(lambda lr: (lr.strip().split(':')[0][2:], [lr.strip().split(':')[1].strip()]), list(filter(lambda l: l.find('--lr:') != -1, content))))
+                res_dict.update(res)
+                res_dict = dict(map(lambda x: x if x[1] != None else (x[0], ['NULL']), res_dict.items()))
+                # pprint(res_dict)
+            
+                res_comb = list(functools.reduce(lambda a,b: b if a is None else [','.join([x for x in item]) for item in itertools.product(a, b)], res_dict.values(), None))
+                flag = False
+                res_comb_list = [dict(zip(res_dict.keys(), x.split(','))) for x in res_comb]
+                # pprint(res_comb_list)
+                pass
+            ts = None
+            opt_list_2 = 'timestamp'.split(',')
+            with open(f'{train_log_file}', 'r') as f:
+                content = f.read().split('\n')
+                # pprint(content)
+                ts = list(filter(lambda l: True in [opt in l for opt in opt_list_2], content))[0].split('timestamp=')[1].split(']')[0]
+                # res_dict.update(**dict(map(to_tuple, res)))
+                pass
+            # print(ts)
+            
+            for attempt in res_comb_list:
+                a_record = TableRunsDetailsTupleClass()
+                updated_dict = trd.update_record_by_dict(a_record, attempt, relation_dict)
+                
+                updated_dict['timestamp'] = ts
+                # pprint(res_dict)
+                if res_dict['sidelength'][0] != 'NULL':
+                    updated_dict['cropped_width'] = str(res_dict['sidelength'][0])
+                    updated_dict['cropped_heigth'] = str(res_dict['sidelength'][0])
+                    updated_dict['is_cropped'] = str('TRUE')
+                else:
+                    updated_dict['is_cropped'] = str('FALSE')
+                    pass
+                # pprint(updated_dict['image_name']['vals'])
+                image_name = updated_dict['image_name']['vals']
+                # pprint(original_images_dict.keys())
+                if image_name in list(original_images_dict.keys()):
+                    h = original_images_dict[f'{image_name}']['heigth']
+                    w = original_images_dict[f'{image_name}']['width']
+                    updated_dict['width'] = w
+                    updated_dict['heigth'] = h
+                    # print(w, h)
+                    pass
+                else:
+                    raise Exception(f'{image_name} not found')
+                if gpu_mode is True:
+                    updated_dict['gpu'] = str('TRUE')
+                else:
+                    updated_dict['gpu'] = str('FALSE')
+                    pass
+                
+                trd.append(updated_dict)
+                pass
+        except Exception as err:
+            # print(str(err))
+            flag = True
+            failed_read.append(f'{parser_logged_file}')
+        finally:
+            if flag:
+                print('Failed.')
+            else:    
+                print('Success.')
+                pass
+            pass
+        pass
+    return trd, failed_read
+
+def insert_data_read_from_logs(conf_data, table_name, records):
+    
+    if conf_data['db_infos']['is_local_db']:
+        db_resource = os.path.join(
+            conf_data['db_infos']['db_location'],
+            conf_data['db_infos']['db_name'])
+    else:
+        db_resource = conf_data['db_infos']['db_url']
+        pass
+    
+    records_exist = check_exists_data_read_from_logs_db(db_resource, table_name, records)
+    
+    def filter_func(item, black_list = records_exist):
+        ts = item['timestamp']['vals']
+        if ts in black_list: return False
+        return True
+    # pprint(records_exist)
+    if len(records_exist) == 0:
+        print('no records filtered!')
+        filtered_recs = records
+    else:
+        print('some records to be filtered!')
+        filtered_recs = list(filter(filter_func, records))
+        pass
+    # pprint(filtered_recs)
+    trd = TableRunsDetailsClass()
+    
+    # pprint(filtered_recs[0])
+    for a_record_dict in filtered_recs:
+        a_record = trd.make_record(list(a_record_dict.values()))
+        # pprint(a_record)
+        trd.append(a_record)
+        pass
+    data = trd.get_all_records_processed_for_query_insert()
+    # pprint(data)
+    insert_data_read_from_logs_db(db_resource, table_name, data)
+    pass

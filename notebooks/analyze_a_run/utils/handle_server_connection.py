@@ -202,10 +202,12 @@ def get_data_from_db_by_constraints(conf_data, constraints = '*', fetch_data_dow
     result_dict_df = None
     table_name = 'table_runs_logged'
     table_attributes = "image,date,timestamp,hidden_features,image_size,status,data_downloaded"
-    
-    sql_statement = \
-        f"SELECT {table_attributes} FROM {table_name}" \
-        + f" WHERE {constraints}"
+    sql_statement = f"SELECT {table_attributes} FROM {table_name}"
+    if constraints is not None and len(constraints) != 0:
+        sql_statement = \
+            f"{sql_statement}" \
+            + f" WHERE {constraints}"
+        pass
     print(sql_statement + ";")
     
     records_list = _get_data_from_db(conf_data, sql_statement + ";")
@@ -217,3 +219,52 @@ def get_data_from_db_by_constraints(conf_data, constraints = '*', fetch_data_dow
         result_dict_df = _get_dict_dataframes(records_list = records_list_filtered, columns = conf_data['columns_df_str'].split(";"))
         pass
     return records_list_mapped, result_dict_df, sql_statement + ";"
+
+def check_exists_data_read_from_logs_db(db_resource, table_name, data):
+    
+    records_exist = []
+    with contextlib.closing(sqlite3.connect(f"{db_resource}")) as connection:
+        with contextlib.closing(connection.cursor()) as cursor:
+            # Test code snippet:
+            # rows = cursor.execute("SELECT 1").fetchall()
+            # print(rows)
+        
+            for a_record in data:
+                # print(a_record['timestamp'])
+                t = a_record['timestamp']['type']
+                val = a_record['timestamp']['vals']
+                if t is str:
+                    val = f"'{val}'"
+                else:
+                    val = t(val)
+                    pass
+                sql_statement = f'SELECT COUNT(*) FROM {table_name}' + \
+                    f" WHERE timestamp = {val}"
+                # print(sql_statement + ";")
+                rows = cursor.execute(f'{sql_statement}' + ';').fetchall()
+                # print(rows)
+                if rows[0] != (0,):
+                    records_exist.append(a_record['timestamp']['vals'])
+            pass
+        pass
+    return records_exist
+
+def insert_data_read_from_logs_db(db_resource, table_name, data):
+    with contextlib.closing(sqlite3.connect(f"{db_resource}")) as connection:
+        with contextlib.closing(connection.cursor()) as cursor:
+            # Test code snippet:
+            # rows = cursor.execute("SELECT 1").fetchall()
+            # print(rows)
+        
+            for ii, (attr_names, attr_values) in enumerate(data):
+                print('-' * 50)
+                print('Record no.', ii+1)
+                print('-' * 50)
+                sql_statement = f'INSERT INTO {table_name} {attr_names} VALUES {attr_values}'
+                print(f'{sql_statement}' + ';')
+                rows = cursor.execute(f'{sql_statement}' + ';').fetchall()
+                print(rows)
+            pass
+            connection.commit()
+        pass
+    pass

@@ -22,6 +22,7 @@ import collections
 import datetime
 import functools
 import glob
+import itertools
 import json
 import operator
 import os
@@ -93,5 +94,6 @@ from sklearn.preprocessing import PolynomialFeatures
 
 from utils.functions import read_conf_file, load_target_image, get_dict_dataframes, get_dataframe
 from utils.make_graphics import compare_compressions
-from utils.work import calculate_several_jpeg_compression, get_cropped_by_center_image, fetch_data, fetch_data_by_status, fetch_data_by_constraints
+from utils.work import calculate_several_jpeg_compression, get_cropped_by_center_image, fetch_data, fetch_data_by_status, fetch_data_by_constraints, get_info_from_logged_parser, insert_data_read_from_logs
 from utils.handle_server_connection import get_data_from_db, get_data_from_db_by_status
+from utils.db_tables import TableRunsDetailsClass, TableRunsDetailsTupleClass
