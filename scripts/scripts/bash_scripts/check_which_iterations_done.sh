@@ -18,20 +18,16 @@ function show_info_v1 () {
 	END{}'
 }
 
-hf=$(cat train_log.txt | grep -E "^INFO:root:hidden_features" | sort | uniq | cut -d ' ' -f 2)
-
 cat train_log.txt \
 	| grep -E "^hidden_layers" \
 	| sort \
 	| uniq -c \
-	| awk -v hf=${hf} '
+	| awk '
 	BEGIN{}
-	{print sprintf("%d,%d,%d", hf, $3, $1) > "trials_done.csv"}
+	{print sprintf("%d,%d", $3, $1) > "trials_done.csv"}
 	END{}'
 
-python scripts/python_scripts/show_hl_vs_trials_done.py -h
-
-python scripts/python_scripts/show_hl_vs_trials_done.py --csv_filename trials_done.csv
+python show_hl_vs_trials_done.py --csv_filename trials_done.csv
 		
 
 

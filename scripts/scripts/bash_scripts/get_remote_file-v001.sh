@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-clear
-
 # --- Global Variables ---
 script_name=$0
 src_path=""
@@ -14,7 +12,7 @@ function update_src_path() {
     # exploiting infos within input config file,
     # which have been stored inside a bash hash table.
 
-    keys_for_src_path=("user" "image_name" "date" "timestamp")
+    keys_for_src_path=("user" "date" "timestamp")
     src_path=${conf_table["src_path"]}
     for k in ${keys_for_src_path[@]} ; do
       # echo $k
@@ -90,34 +88,17 @@ CMD="pscp"
 # echo "${CMD} ${conf_table["user"]}@${conf_table["remote_server"]}:${src_path}/${conf_table["src_filename"]} ${conf_table["dest_filename"]}"
 ${CMD} ${conf_table["user"]}@${conf_table["remote_server"]}:${src_path}/${conf_table["src_filename"]} ${conf_table["dest_filename"]}
 
-# exit 0
 # Check wheter data collected.
 if [ $? -ne 0 ] ; then
   echo "Error: ${CMD} failed!"
   exit -1
 fi
 
- hf=$(cat train_log.txt | grep -E "^INFO:root:hidden_features" | sort | uniq | cut -d ' ' -f 2)
-
 # Show status training.
-# cat ${conf_table["dest_filename"]} | sed 's/INFO:root://g' | grep -E "^hidden_layers" | sort | uniq -c
-cat train_log.txt \
-	| grep -E "^hidden_layers" \
-	| sort \
-	| uniq -c \
-	| awk -v hf=${hf} '
-	BEGIN{}
-	{print sprintf("%d,%d,%d", hf, $3, $1) > "trials_done.csv"}
-	END{}'
-
-cat trials_done.csv
-
-echo ""
-echo ""
-python scripts/python_scripts/show_hl_vs_trials_done.py --csv_filename trials_done.csv
+cat ${conf_table["dest_filename"]} | sed 's/INFO:root://g' | grep -E "^hidden_layers" | sort | uniq -c
 
 # Save gotten data into proper directory path, whitin local file system.
-dest_dir_local=${conf_table["image_name"]}/${conf_table["date"]}/${conf_table["timestamp"]}
+dest_dir_local=${conf_table["date"]}/${conf_table["timestamp"]}
 if [ ! -d $dest_dir_local ] ; then
   mkdir -p $dest_dir_local
   if [ $? -ne 0 ] ; then

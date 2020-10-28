@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-clear
-
 # --- Global Variables ---
 script_name=$0
 src_path=""
@@ -15,7 +13,7 @@ function update_src_path() {
     # which have been stored inside a bash hash table.
 
     keys_for_src_path=("user" "image_name" "date" "timestamp")
-    src_path=${conf_table["src_path"]}
+    src_path=${conf_table["src_dir"]}
     for k in ${keys_for_src_path[@]} ; do
       # echo $k
       val=${conf_table[$k]}
@@ -82,54 +80,21 @@ update_src_path
 # src_path="${conf_table["src_path"]/user/${conf_table["user"]}}" 
 # src_path="${src_path/date/${conf_table["date"]}}"
 # src_path="${src_path/timestamp/${conf_table["timestamp"]}}"
-# echo ${src_path}
+echo ${src_path}
 # exit 0
 
 # Get data from remote server.
 CMD="pscp"
-# echo "${CMD} ${conf_table["user"]}@${conf_table["remote_server"]}:${src_path}/${conf_table["src_filename"]} ${conf_table["dest_filename"]}"
-${CMD} ${conf_table["user"]}@${conf_table["remote_server"]}:${src_path}/${conf_table["src_filename"]} ${conf_table["dest_filename"]}
-
+# echo "${CMD} -r ${conf_table["user"]}@${conf_table["remote_server"]}:${src_path} ${conf_table["dest_dir"]}"
+${CMD} -r ${conf_table["user"]}@${conf_table["remote_server"]}:${src_path} ${conf_table["dest_dir"]}
 # exit 0
+
 # Check wheter data collected.
 if [ $? -ne 0 ] ; then
   echo "Error: ${CMD} failed!"
   exit -1
 fi
 
- hf=$(cat train_log.txt | grep -E "^INFO:root:hidden_features" | sort | uniq | cut -d ' ' -f 2)
-
-# Show status training.
-# cat ${conf_table["dest_filename"]} | sed 's/INFO:root://g' | grep -E "^hidden_layers" | sort | uniq -c
-cat train_log.txt \
-	| grep -E "^hidden_layers" \
-	| sort \
-	| uniq -c \
-	| awk -v hf=${hf} '
-	BEGIN{}
-	{print sprintf("%d,%d,%d", hf, $3, $1) > "trials_done.csv"}
-	END{}'
-
-cat trials_done.csv
-
-echo ""
-echo ""
-python scripts/python_scripts/show_hl_vs_trials_done.py --csv_filename trials_done.csv
-
-# Save gotten data into proper directory path, whitin local file system.
-dest_dir_local=${conf_table["image_name"]}/${conf_table["date"]}/${conf_table["timestamp"]}
-if [ ! -d $dest_dir_local ] ; then
-  mkdir -p $dest_dir_local
-  if [ $? -ne 0 ] ; then
-    echo "Error: dir '$dest_dir_local' not created!"
-    exit -1
-  fi
-fi
-
-# Copy data to local file system.
-# cp ${conf_table["dest_filename"]} "${conf_table["date"]}_${conf_table["timestamp"]}_${conf_table["dest_filename"]}"
-cp ${conf_table["dest_filename"]} ${dest_dir_local}/${conf_table["dest_filename"]}
-cp ${conf_file} ${dest_dir_local}/${conf_file}
 
 exit 0
 

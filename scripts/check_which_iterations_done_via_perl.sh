@@ -19,19 +19,23 @@ function show_info_v1 () {
 }
 
 hf=$(cat train_log.txt | grep -E "^INFO:root:hidden_features" | sort | uniq | cut -d ' ' -f 2)
+timestamp=$(cat train_log.txt | grep timestamp | grep -E "^INFO:root:Start" | cut -d "=" -f 2 | cut -d ']' -f 1)
+date_train=$(cat train_log.txt | grep timestamp | grep -E "^INFO:root:Start" | cut -d '[' -f 2 | cut -d ']' -f 1)
+
+echo $hf $timestamp $date_train
 
 cat train_log.txt \
 	| grep -E "^hidden_layers" \
 	| sort \
 	| uniq -c \
-	| awk -v hf=${hf} '
+	| awk -v hf=${hf} -v timestamp=${timestamp} -v date_train=${date_train} '
 	BEGIN{}
-	{print sprintf("%d,%d,%d", hf, $3, $1) > "trials_done.csv"}
+	{print sprintf("%s,%s,%d,%d,%d", date_train, timestamp, hf, $3, $1) > "trials_done.csv"}
 	END{}'
 
-python scripts/python_scripts/show_hl_vs_trials_done.py -h
+perl scripts/perl_scripts/a_script.pl -h
 
-python scripts/python_scripts/show_hl_vs_trials_done.py --csv_filename trials_done.csv
+perl scripts/perl_scripts/a_script.pl --file_path trials_done.csv
 		
 
 

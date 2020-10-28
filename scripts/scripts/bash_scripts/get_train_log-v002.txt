@@ -97,24 +97,8 @@ if [ $? -ne 0 ] ; then
   exit -1
 fi
 
- hf=$(cat train_log.txt | grep -E "^INFO:root:hidden_features" | sort | uniq | cut -d ' ' -f 2)
-
 # Show status training.
-# cat ${conf_table["dest_filename"]} | sed 's/INFO:root://g' | grep -E "^hidden_layers" | sort | uniq -c
-cat train_log.txt \
-	| grep -E "^hidden_layers" \
-	| sort \
-	| uniq -c \
-	| awk -v hf=${hf} '
-	BEGIN{}
-	{print sprintf("%d,%d,%d", hf, $3, $1) > "trials_done.csv"}
-	END{}'
-
-cat trials_done.csv
-
-echo ""
-echo ""
-python scripts/python_scripts/show_hl_vs_trials_done.py --csv_filename trials_done.csv
+cat ${conf_table["dest_filename"]} | sed 's/INFO:root://g' | grep -E "^hidden_layers" | sort | uniq -c
 
 # Save gotten data into proper directory path, whitin local file system.
 dest_dir_local=${conf_table["image_name"]}/${conf_table["date"]}/${conf_table["timestamp"]}
