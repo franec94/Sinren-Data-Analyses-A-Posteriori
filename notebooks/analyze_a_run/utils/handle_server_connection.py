@@ -35,6 +35,30 @@ import pandas as pd
 
 from utils.functions import check_file_exists
 
+def get_constraints_for_query_db():
+    typename = 'QueryConstraints'
+    field_names = "image;date;timestamp;hidden_features;image_size;status".split(";")
+    field_types = "str;str;str;int;str;str".split(";")
+
+    QueryConstraints = collections.namedtuple(typename, field_names)
+    # def map_func(field_type): return dict(zip(['type', 'val'], [eval(field_type), None]))
+    # fields_list = list(map(map_func, field_types))
+    # constraints = QueryConstraints._make(fields_list)
+    # pprint(constraints)
+    
+    image = dict(zip(['type', 'val'], [str, list(sorted("cameramen".split(";")))]))
+    date = None
+    timestamp = dict(zip(['type', 'val'], [str, list(sorted("".split(";")))]))
+    hidden_features = dict(zip(['type', 'val'], [int, list(sorted("".split(";")))]))
+    image_size = dict(zip(['type', 'val'], [str, list(sorted("[256,256]".split(";")))]))
+    status = dict(zip(['type', 'val'], [str, list(sorted("done".split(";")))]))
+
+    fields_list = [image, date, timestamp, hidden_features, image_size, status]
+    constraints = QueryConstraints._make(fields_list)
+
+    pprint(constraints)
+    return constraints
+
 def _get_dict_dataframes(records_list, columns):
     
     if records_list is None or len(records_list) == 0: return None

@@ -56,10 +56,15 @@ if  (in_notebook() or in_ipython()) and SHOW_VISDOM_RESULTS:
     import visdom
     pass
 
-if in_colab() or in_notebook():
-    # back end of ipywidgets
+if in_colab() or in_notebook() or in_colab():
+    # Back end of ipywidgets.
     from IPython.display import display    
     import ipywidgets as widgets
+    
+    # Plotly imports.
+    import chart_studio.plotly as py
+    import plotly.figure_factory as ff
+    import plotly.express as px
     pass
 
 # Data Scienc & Machine Learning main imports.
@@ -95,5 +100,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from utils.functions import read_conf_file, load_target_image, get_dict_dataframes, get_dataframe
 from utils.make_graphics import compare_compressions
 from utils.work import calculate_several_jpeg_compression, get_cropped_by_center_image, fetch_data, fetch_data_by_status, fetch_data_by_constraints, get_info_from_logged_parser, insert_data_read_from_logs
-from utils.handle_server_connection import get_data_from_db, get_data_from_db_by_status
+from utils.handle_server_connection import get_data_from_db, get_data_from_db_by_status, get_constraints_for_query_db
 from utils.db_tables import TableRunsDetailsClass, TableRunsDetailsTupleClass
+
+from utils.handle_dataframes import prepare_and_merge_target_dfs
