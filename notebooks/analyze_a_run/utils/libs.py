@@ -2,6 +2,7 @@ from __future__ import print_function
 
 SHOW_VISDOM_RESULTS = False
 DARK_BACKGROUND_PLT = True
+SHOW_RESULTS_BY_TABS = True
 
 # ----------------------------------------------- #
 # Python's Imports
@@ -19,6 +20,7 @@ from pprint import pprint
 # import psycopg2 as ps
 import contextlib
 import collections
+import copy
 import datetime
 import functools
 import glob
@@ -32,6 +34,19 @@ import sys
 import time
 import yaml
 
+# Plotly imports.
+# ----------------------------------------------- #
+import chart_studio.plotly as py
+import plotly.figure_factory as ff
+import plotly.express as px
+
+# Dash imports.
+# ----------------------------------------------- #
+import dash
+import dash_bootstrap_components as dbc
+import dash_core_components as dcc
+import dash_html_components as html
+from dash.dependencies import Input, Output
 
 # FastAi imports.
 # ----------------------------------------------- #
@@ -60,11 +75,6 @@ if in_colab() or in_notebook() or in_colab():
     # Back end of ipywidgets.
     from IPython.display import display    
     import ipywidgets as widgets
-    
-    # Plotly imports.
-    import chart_studio.plotly as py
-    import plotly.figure_factory as ff
-    import plotly.express as px
     pass
 
 # Data Scienc & Machine Learning main imports.
@@ -99,8 +109,9 @@ from sklearn.preprocessing import PolynomialFeatures
 
 from utils.functions import read_conf_file, load_target_image, get_dict_dataframes, get_dataframe
 from utils.make_graphics import compare_compressions
-from utils.work import calculate_several_jpeg_compression, get_cropped_by_center_image, fetch_data, fetch_data_by_status, fetch_data_by_constraints, get_info_from_logged_parser, insert_data_read_from_logs
+from utils.work import fetch_data, fetch_data_by_status, fetch_data_by_constraints, get_info_from_logged_parser, insert_data_read_from_logs
 from utils.handle_server_connection import get_data_from_db, get_data_from_db_by_status, get_constraints_for_query_db
 from utils.db_tables import TableRunsDetailsClass, TableRunsDetailsTupleClass
 
-from utils.handle_dataframes import prepare_and_merge_target_dfs
+from utils.handle_dataframes import prepare_and_merge_target_dfs, calculate_several_jpeg_compression, get_cropped_by_center_image
+from utils.custom_dash_app import get_dash_app
