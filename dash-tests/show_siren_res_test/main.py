@@ -1,3 +1,5 @@
+import argparse
+
 import dash
 import dash_auth
 import dash_core_components as dcc
@@ -22,10 +24,12 @@ auth = dash_auth.BasicAuth(
 )
 
 
-def dash_get_data_merged():
+def dash_get_data_merged(path_conf_file):
     # -- Read conf.txt.
-    conf_file_path = 'conf.txt'
+    conf_file_path = f'{path_conf_file}'
     conf_data = read_conf_file(conf_file_path)
+
+    pprint(conf_data)
 
     # -- Load Siren Data into Dataframe.
     constraints = get_constraints_for_query_db()
@@ -77,7 +81,11 @@ def dash_get_data_merged():
 if __name__ == '__main__':
     # app.run_server(debug=True)
 
-    merged_df = dash_get_data_merged()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--path_conf", type=str, dest='path_conf_file')
+    args = parser.parse_args()
+
+    merged_df = dash_get_data_merged(path_conf_file=args.path_conf_file)
     x = 'bpp'; hue='compression'
     y_list = "psnr,ssim,CR".split(",")
     figs_list = []
