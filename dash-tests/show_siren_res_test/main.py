@@ -69,15 +69,16 @@ def dash_get_data_merged(path_conf_file):
     # -- Merge
     vars_dict = dict(
         image=im_cropped,                                                                  # Target Image , either cropped or not.
-        siren_columns_for_merge="psnr,ssim,CR,bpp,file_size_bits,compression".split(","),  # Here, list siren_df columns for merge purpose.
-        jpeg_columns_for_merge="psnr,ssim,CR,bpp,file_size_bits,compression".split(","),   # Here, list jpeg_df columns for merge purpose.
-        columns_names_merge="psnr,ssim,CR,bpp,file_size_bits,compression".split(","),      # Here, list new columns name after merge.
+        siren_columns_for_merge="mse,psnr,ssim,CR,bpp,file_size_bits,compression".split(","),  # Here, list siren_df columns for merge purpose.
+        jpeg_columns_for_merge="mse,psnr,ssim,CR,bpp,file_size_bits,compression".split(","),   # Here, list jpeg_df columns for merge purpose.
+        columns_names_merge="mse,psnr,ssim,CR,bpp,file_size_bits,compression".split(","),      # Here, list new columns name after merge.
     )
     merged_df, siren_df, jpeg_df = prepare_and_merge_target_dfs(
        siren_df, jpeg_df,
         **vars_dict
     )
     return merged_df, siren_df, jpeg_df 
+
 
 def get_app_to_run(figs_list):
     app = dash.Dash('Siren+Jpeg Results', external_stylesheets=[dbc.themes.DARKLY])
@@ -130,16 +131,7 @@ def get_app_to_run(figs_list):
         pass
     return app
 
-if __name__ == '__main__':
-    # app.run_server(debug=True)
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--path_conf", type=str, dest='path_conf_file')
-    args = parser.parse_args()
-
-    merged_df, siren_df, jpeg_df  = dash_get_data_merged(path_conf_file = args.path_conf_file)
-    x = 'bpp'; hue='compression'
-    y_list = "psnr,ssim,CR".split(",")
-    figs_list = []; templates = ["plotly", "plotly_white", "plotly_dark", "ggplot2", "seaborn", "simple_white", "none"]
+def get_dash_fig_list_merged_dfs(merged_df, x, hue, y_list, templates):
     for y in y_list:
         # print(f'Processing: {y}')
         fig = px.scatter(merged_df, template = templates[2], x=f"{x}", y=f"{y}", color=f"{hue}",title=f'{y.upper()} vs. {x.upper()} | gropude by {hue.upper()} in siren+jpeg df')
@@ -170,17 +162,22 @@ if __name__ == '__main__':
         figs_list.append(fig)
         pass
 
+    return figs_list
+
+
+def get_siren_dash_fig_list(siren_df, x, hue, templates):
     # Sinre MSE graphics:
+    figs_list_siren = []
     x = 'bpp'; y = "mse"; hue='compression'
     # scatter-siren
     fig = px.scatter(siren_df, x=f"{x}", y=f"{y}", color=f"{hue}")# ,title=f'{y.upper()} vs. {x.upper()} | gropude by {hue.upper()} in siren-df')
     fig.update_layout(template = templates[2], title_text=f'{y.upper()} | Groupped by {hue} | siren-df')
-    figs_list.append(fig)
+    figs_list_siren.append(fig)
 
     # box-siren
     fig = px.box(siren_df, template = templates[2], x =f"{hue}",  y=f"{y}")
     fig.update_layout(template = templates[2], title_text=f'{y.upper()} | Groupped by {hue} | siren-df')
-    figs_list.append(fig)
+    figs_list_siren.append(fig)
 
     # kde-siren
     groups_dict = siren_df.groupby(by = ['compression']).groups
@@ -194,19 +191,31 @@ if __name__ == '__main__':
 
     x_min, x_max = siren_df[f'{y}'].values.min(), siren_df[f'{y}'].values.max()
     fig.update_xaxes(range=[x_min, x_max])
-    figs_list.append(fig)
+    figs_list_siren.append(fig)
 
-    figs_list = list(map(lambda fig: dcc.Graph(figure=fig), figs_list))
-    # app = dash.Dash()
-    """
-    app.layout = html.Div([
-        dcc.Graph(figure=fig),
-        dcc.Graph(figure=fig),
-        dcc.Graph(figure=fig),
-    ])
-    """
-    # app.layout = html.Div(figs_list)
-    app = get_app_to_run(figs_list)
+    return figs_list_siren
+
+
+if __name__ == '__main__':
+    # app.run_server(debug=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--path_conf", type=str, dest='path_conf_file')
+    args = parser.parse_args()
+
+    merged_df, siren_df, jpeg_df  = dash_get_data_merged(path_conf_file = args.path_conf_file)
+    
+    x = 'bpp'; hue='compression'
+    y_list = "mse,psnr,ssim,CR".split(",")
+    figs_list = []; templates = ["plotly", "plotly_white", "plotly_dark", "ggplot2", "seaborn", "simple_white", "none"]
+
+    figs_list = get_dash_fig_list_merged_dfs(merged_df, x, hue, y_list, templates)
+    dash_figs_list = list(map(lambda fig: dcc.Graph(figure=fig), figs_list))
+
+
+    figs_list_siren = get_siren_dash_fig_list(siren_df, x, hue, templates)
+    dash_figs_list_siren = list(map(lambda fig: dcc.Graph(figure=fig), figs_list_siren))
+    
+    app = get_dash_app(dash_figs_list, dash_figs_list_siren, len(y_list))
     app.run_server(debug=True, use_reloader=False, host='localhost') 
     
     pass

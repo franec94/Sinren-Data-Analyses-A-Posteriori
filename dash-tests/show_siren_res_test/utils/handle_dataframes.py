@@ -35,6 +35,14 @@ import scipy
 import numpy as np
 import pandas as pd
 
+# skimage
+# ----------------------------------------------- #
+import skimage
+import skimage.metrics as skmetrics
+from skimage.metrics import peak_signal_noise_ratio as psnr
+from skimage.metrics import structural_similarity as ssim
+from skimage.metrics import mean_squared_error
+
 def get_new_targets(target, size):
     offset = target // 2
     if target % 2 == 0:
@@ -67,7 +75,7 @@ def calculate_several_jpeg_compression(image, image_dim_bits, qualities):
     # Named tuple for creating a record related to
     # a trial for compressing the target image.
     typename = 'WeightsPsnr'
-    fields_name = ['psnr', 'ssim', 'quality', 'file_size_bits', 'bpp', 'width', 'heigth', 'CR']
+    fields_name = ['mse', 'psnr', 'ssim', 'quality', 'file_size_bits', 'bpp', 'width', 'heigth', 'CR']
     WeightsPsnr = collections.namedtuple(typename, fields_name) 
 
     # List used to save results and keep trace of failures, if any.
@@ -99,12 +107,13 @@ def calculate_several_jpeg_compression(image, image_dim_bits, qualities):
             
                 # Scores
                 bpp = compressed_file_size_bits / pixels    
+                mse_score = mean_squared_error(np.asarray(image), np.asarray(im_jpeg))
                 psnr_score = psnr(np.asarray(image), np.asarray(im_jpeg), data_range=255)
                 ssim_score = ssim(np.asarray(image), np.asarray(im_jpeg), data_range=255)
                 CR = image_dim_bits / compressed_file_size_bits
             
                 # Store results into a list
-                values = [psnr_score, ssim_score, quality, compressed_file_size_bits, bpp, width, height, CR]
+                values = [mse_score, psnr_score, ssim_score, quality, compressed_file_size_bits, bpp, width, height, CR]
                 result_tuples.append(WeightsPsnr._make(values))
         except Exception as err:
             # Keep track of unaccepted quality values for compressing the image
