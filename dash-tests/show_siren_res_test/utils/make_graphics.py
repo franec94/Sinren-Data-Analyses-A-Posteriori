@@ -23,7 +23,7 @@ if in_colab() or in_notebook():
     pass
 
 import io
-# from googleapiclient.http import MediaIoBaseDownload
+from googleapiclient.http import MediaIoBaseDownload
 import zipfile
 
 import collections
