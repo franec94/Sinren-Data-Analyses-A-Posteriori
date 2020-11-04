@@ -1,0 +1,24 @@
+{
+    "articles": [
+        {
+            "title": "Correcting Class Imbalanced Data For Binary Classification Problems (Demonstrations Using Animated Videos)",
+            "url": "https://analyticsindiamag.com/correcting-class-imbalanced-data-for-binary-classification-problems-demonstrations-using-animated-videos/"
+        },
+        {
+            "title": "Beginners Guide To Tabulate: Python Tool For Creating Nicely Formatted Tables",
+            "url": "https://analyticsindiamag.com/beginners-guide-to-tabulate-python-tool-for-creating-nicely-formatted-tables/"
+        },
+        {
+            "title": "How To Get Started With Exploratory Data Analysis & Data Preprocessing",
+            "url": "https://analyticsindiamag.com/tutorial-get-started-with-exploratory-data-analysis-and-data-preprocessing/"
+        },
+        {
+            "title": "Hands-On Tutorial On Lens: Python Tool For Swift Statistical Analysis",
+            "url": "https://analyticsindiamag.com/hands-on-tutorial-on-lens-python-tool-for-swift-statistical-analysis/"
+        },
+        {
+            "title": "",
+            "url": ""
+        }
+    ]
+}

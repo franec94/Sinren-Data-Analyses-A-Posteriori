@@ -1,0 +1,25 @@
+{
+    "articles": [
+        {
+            "title": "Signal to quantization noise in quantized sinusoidal",
+            "url": "http://www.dsplog.com/2007/03/19/signal-to-quantization-noise-in-quantized-sinusoidal/"
+        },
+        {
+            "title": "",
+            "url": ""
+        }
+    ],
+
+    "references": [
+        {
+            "title": "Digital Signal Processing: Principles, Algorithms and Applications",
+            "kind": "book",
+            "url": "https://www.amazon.com/Digital-Signal-Processing-Principles-Applications/dp/8120311299"
+        },
+        {
+            "title": "",
+            "kind": "",
+            "url": ""
+        }
+    ]
+}
